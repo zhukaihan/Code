@@ -4,12 +4,35 @@ import cv2
 import mediapipe as mp
 import numpy as np
 
+import Hands
 from Mouse import Mouse
 from Tracker import Tracker
 
 mp_drawing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
-mp_hands = mp.solutions.hands
+mp_hands = Hands
+
+
+def draw_palm_bbox(image, palm):
+
+  palm_c = np.array([palm.x_center * image.shape[1], palm.y_center * image.shape[0]], dtype=int)
+  
+  halfX = palm.width / 2 * image.shape[1]
+  halfY = palm.height / 2 * image.shape[0]
+  R = np.array([
+    [np.cos(-palm.rotation), -np.sin(-palm.rotation)],
+    [np.sin(-palm.rotation), np.cos(-palm.rotation)]
+  ])
+  palm_ul = palm_c + (np.array([-halfX, -halfY]) @ R).astype(int)
+  palm_ll = palm_c + (np.array([-halfX, halfY]) @ R).astype(int)
+  palm_ur = palm_c + (np.array([halfX, -halfY]) @ R).astype(int)
+  palm_lr = palm_c + (np.array([halfX, halfY]) @ R).astype(int)
+  
+  cv2.line(image, palm_ul, palm_ll, color=(255, 0, 0))
+  cv2.line(image, palm_ll, palm_lr, color=(255, 0, 0))
+  cv2.line(image, palm_lr, palm_ur, color=(255, 0, 0))
+  cv2.line(image, palm_ur, palm_ul, color=(255, 0, 0))
+  cv2.circle(image, palm_c, 5, color=(255, 0, 0))
 
 
 
@@ -63,14 +86,15 @@ mouse = Mouse()
 cap = cv2.VideoCapture(0)
 if cap.isOpened():
   success, image = cap.read()
-  tracker = Tracker(HAND_LANDMARK=mp_hands.HandLandmark, image_shape=image.shape[:2])
+  tracker = Tracker(image_shape=image.shape[:2])
 
 # For webcam input:
 with mp_hands.Hands(
     model_complexity=0,
     min_detection_confidence=0.5,
     max_num_hands=1,
-    min_tracking_confidence=0.5) as hands:
+    min_tracking_confidence=0.5,
+    static_image_mode=True) as hands:
   while cap.isOpened():
     success, image = cap.read()
     if not success:
@@ -90,11 +114,9 @@ with mp_hands.Hands(
     if results.multi_hand_landmarks:
       # Hand detected. 
 
-      # hand_landmarks = results.multi_hand_landmarks
-      # for hand_landmarks in results.multi_hand_landmarks:
-
       hand_landmarks = results.multi_hand_landmarks[0]
 
+      # Draw hand landmarks. 
       mp_drawing.draw_landmarks(
           image,
           hand_landmarks,
@@ -102,10 +124,15 @@ with mp_hands.Hands(
           mp_drawing_styles.get_default_hand_landmarks_style(),
           mp_drawing_styles.get_default_hand_connections_style())
 
+      # Draw palm's bounding box. 
+      if results.hand_rects_from_palm_detections:
+        draw_palm_bbox(image, results.hand_rects_from_palm_detections[0])
+
       # Detect gesture. 
       is_fist, is_left_click, is_right_click, dDist = tracker.gestureRecognition(hand_landmarks)
       # Control mouse. 
       mouse(is_left_click, is_right_click, dDist)
+
     else:
       # No hand, reset location averaging of the tracker. 
       tracker.reset()
