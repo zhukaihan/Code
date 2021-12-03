@@ -6,7 +6,7 @@ import numpy as np
 
 import Hands
 from Mouse import Mouse
-from Tracker import Tracker
+from Tracker import Tracker, TrackingSource
 
 mp_drawing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
@@ -81,20 +81,21 @@ def draw_palm_bbox(image, palm):
 
 
 
-
+TRACKING_WITH = TrackingSource.HAND_LANDMARKS
 mouse = Mouse()
 cap = cv2.VideoCapture(0)
 if cap.isOpened():
   success, image = cap.read()
-  tracker = Tracker(image_shape=image.shape[:2])
+  tracker = Tracker(image_shape=image.shape[:2], trackWith=TRACKING_WITH)
 
 # For webcam input:
+# static_image_mode allows palm bbox output, but lowers landmark quality as it no longer uses last landmark info. 
 with mp_hands.Hands(
     model_complexity=0,
     min_detection_confidence=0.5,
     max_num_hands=1,
     min_tracking_confidence=0.5,
-    static_image_mode=True) as hands:
+    static_image_mode=(TRACKING_WITH == TrackingSource.PALM)) as hands:
   while cap.isOpened():
     success, image = cap.read()
     if not success:
@@ -125,11 +126,13 @@ with mp_hands.Hands(
           mp_drawing_styles.get_default_hand_connections_style())
 
       # Draw palm's bounding box. 
+      palm = None
       if results.hand_rects_from_palm_detections:
-        draw_palm_bbox(image, results.hand_rects_from_palm_detections[0])
+        palm = results.hand_rects_from_palm_detections[0]
+        draw_palm_bbox(image, palm)
 
       # Detect gesture. 
-      is_fist, is_left_click, is_right_click, dDist = tracker.gestureRecognition(hand_landmarks)
+      is_fist, is_left_click, is_right_click, dDist = tracker.gestureRecognition(hand_landmarks, palm)
       # Control mouse. 
       mouse(is_left_click, is_right_click, dDist)
 

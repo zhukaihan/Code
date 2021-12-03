@@ -1,5 +1,12 @@
+import enum
 from Hands import HandLandmark as HAND_LANDMARK
 import numpy as np
+import enum
+
+class TrackingSource(enum.IntEnum):
+  """The 21 hand landmarks."""
+  HAND_LANDMARKS = 0
+  PALM = 1
 
 MVMT_LANDMARKS = [
     HAND_LANDMARK.WRIST, 
@@ -8,21 +15,27 @@ MVMT_LANDMARKS = [
     HAND_LANDMARK.RING_FINGER_MCP, 
     HAND_LANDMARK.PINKY_MCP
 ]
+
+LAST_N_DDIST_HAND_LANDMARKS = 1 # Temporal average smoothing, 1 is disable. 
+LAST_N_DDIST_PALM = 4 # Temporal average smoothing, 1 is disable. 
 LEFT_CLICK_THRESHOLD = 0.05
 RIGHT_CLICK_THRESHOLD = 0.07 # Slightly larger right click gap. Model has issue isolating index and middle finger for right click gesture. 
-FIST_THRESHOLD = (np.pi / 2)
-DDIST_PIXEL_THRESH = 1
+FIST_THRESHOLD = np.pi / 2
 
 class Tracker():
     lastLoc = None
-    dDists = np.array([[0, 0]] * 4, dtype = np.float64)
 
 
-    def __init__(self, image_shape):
+    def __init__(self, image_shape, trackWith=TrackingSource.HAND_LANDMARKS):
         self.image_shape = image_shape
+        self.trackWith = trackWith
+        if (self.trackWith == TrackingSource.HAND_LANDMARKS):
+            self.dDists = np.array([[0, 0]] * LAST_N_DDIST_HAND_LANDMARKS, dtype = np.float64)
+        else:
+            self.dDists = np.array([[0, 0]] * LAST_N_DDIST_PALM, dtype = np.float64)
 
 
-    def gestureRecognition(self, hand_landmarks):
+    def gestureRecognition(self, hand_landmarks, palm):
         # print(hand_landmarks.landmark[HAND_LANDMARK.INDEX_FINGER_TIP].z, "\t", hand_landmarks.landmark[HAND_LANDMARK.MIDDLE_FINGER_TIP].z)
         # z coordinate is not reliable. It is reliable reliable when palm tilts along with finger. Finger-only z-coordinate change is not reliable. 
 
@@ -59,11 +72,14 @@ class Tracker():
         is_right_click = middle_thumb_dist < RIGHT_CLICK_THRESHOLD
 
         # Use spacial averaging of multiple landmarks to smooth out fluctuations. 
-        mouseLoc = np.array([0, 0], dtype = np.float64)
-        for lmk in MVMT_LANDMARKS:
-            mouseLoc[0] += -hand_landmarks.landmark[lmk].x
-            mouseLoc[1] += hand_landmarks.landmark[lmk].y
-        mouseLoc /= len(MVMT_LANDMARKS)
+        if self.trackWith == TrackingSource.PALM and palm:
+            mouseLoc = np.array([-palm.x_center, palm.y_center], dtype = np.float64)
+        else:
+            mouseLoc = np.array([0, 0], dtype = np.float64)
+            for lmk in MVMT_LANDMARKS:
+                mouseLoc[0] += -hand_landmarks.landmark[lmk].x
+                mouseLoc[1] += hand_landmarks.landmark[lmk].y
+            mouseLoc /= len(MVMT_LANDMARKS)
         mouseLoc[0] *= self.image_shape[1] # x is number of cols. 
         mouseLoc[1] *= self.image_shape[0]
 
@@ -72,10 +88,8 @@ class Tracker():
             self.dDists[:-1] = self.dDists[1:]
             self.dDists[-1] = mouseLoc - self.lastLoc
         self.lastLoc = mouseLoc
-
-        # Move in that axis only when the movement is larger than 1 pixel. 
+        
         dDist = np.mean(self.dDists, axis = 0)
-        dDist *= (np.abs(dDist) > DDIST_PIXEL_THRESH)
 
         return False, is_left_click, is_right_click, dDist
 

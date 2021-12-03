@@ -19,6 +19,7 @@ class Mouse():
         '''
         dDist *= MVMT_RATIO
         dDist = (np.abs(dDist) ** MVMT_SCALE) * np.sign(dDist)
+        dDist = np.round(dDist) # Important: Round to int to avoid drifting. 
 
         # Move the mouse when not right clicked or scrolling. 
         if not self.isRightPressed:
