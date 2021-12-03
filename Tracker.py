@@ -72,7 +72,7 @@ class Tracker():
         is_right_click = middle_thumb_dist < RIGHT_CLICK_THRESHOLD
 
         # Use spacial averaging of multiple landmarks to smooth out fluctuations. 
-        if self.trackWith == TrackingSource.PALM and palm:
+        if self.trackWith == TrackingSource.PALM:
             mouseLoc = np.array([-palm.x_center, palm.y_center], dtype = np.float64)
         else:
             mouseLoc = np.array([0, 0], dtype = np.float64)

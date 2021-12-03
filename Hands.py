@@ -67,7 +67,7 @@ class HandLandmark(enum.IntEnum):
   PINKY_TIP = 20
 
 
-_BINARYPB_FILE_PATH = 'mediapipe/modules/hand_landmark/hand_landmark_tracking_cpu.binarypb'
+_BINARYPB_FILE_PATH = 'hand_landmark_tracking_cpu.binarypb'
 
 
 class Hands(SolutionBase):
@@ -84,7 +84,6 @@ class Hands(SolutionBase):
   """
 
   def __init__(self,
-               static_image_mode=False,
                max_num_hands=2,
                model_complexity=1,
                min_detection_confidence=0.5,
@@ -107,12 +106,14 @@ class Hands(SolutionBase):
         hand landmarks to be considered tracked successfully. See details in
         https://solutions.mediapipe.dev/hands#min_tracking_confidence.
     """
+    with open('hand_landmark_tracking_cpu.pbtxt') as f:
+      lines = f.read()
     super().__init__(
-        binary_graph_path=_BINARYPB_FILE_PATH,
+        graph_config=lines,
         side_inputs={
             'model_complexity': model_complexity,
             'num_hands': max_num_hands,
-            'use_prev_landmarks': not static_image_mode,
+            'use_prev_landmarks': True,
         },
         calculator_params={
             'palmdetectioncpu__TensorsToDetectionsCalculator.min_score_thresh':
@@ -122,7 +123,11 @@ class Hands(SolutionBase):
         },
         outputs=[
             'multi_hand_landmarks', 'multi_hand_world_landmarks',
-            'multi_handedness', 'hand_rects_from_palm_detections'
+            'multi_handedness', 
+            'palm_detections',
+            'hand_rects_from_landmarks',
+            'hand_rects_from_palm_detections',
+            'all_palm_detections'
         ])
 
   def process(self, image: np.ndarray) -> NamedTuple:
