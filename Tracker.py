@@ -1,5 +1,5 @@
 import enum
-from Hands import HandLandmark as HAND_LANDMARK
+from Inferencer.Hands import HandLandmark as HAND_LANDMARK
 import numpy as np
 import enum
 

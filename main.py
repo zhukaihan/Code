@@ -4,7 +4,7 @@ import cv2
 import mediapipe as mp
 import numpy as np
 
-import Hands
+from Inferencer import Hands
 from Mouse import Mouse
 from Tracker import Tracker, TrackingSource
 
