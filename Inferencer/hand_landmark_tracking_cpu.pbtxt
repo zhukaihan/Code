@@ -74,8 +74,8 @@ node {
   output_stream: "LETTERBOX_PADDING:palm_letterbox_padding"
   options: {
     [mediapipe.ImageToTensorCalculatorOptions.ext] {
-      output_tensor_width: 256
-      output_tensor_height: 256
+      output_tensor_width: 192 # 256
+      output_tensor_height: 192 # 256
       keep_aspect_ratio: true
       output_tensor_float_range {
         min: 0.0
@@ -85,6 +85,7 @@ node {
     }
   }
 }
+
 # Generates a single side packet containing a TensorFlow Lite op resolver that
 # supports custom ops needed by the model used in this graph.
 node {
@@ -114,7 +115,7 @@ node {
         options: {
           [mediapipe.ConstantSidePacketCalculatorOptions.ext]: {
             packet {
-              string_value: "models/palm_detection_vidursatija_blazepalm.tflite"
+              string_value: "models/palm_detection_lite.tflite"
             }
           }
         }
@@ -176,17 +177,21 @@ node {
   output_side_packet: "anchors"
   options: {
     [mediapipe.SsdAnchorsCalculatorOptions.ext] {
-      num_layers: 3 # 4
-      min_scale: 0.015625 # 0.1484375
-      max_scale: 1 # 0.75
-      input_size_width: 256 # 192
-      input_size_height: 256 # 192
+      num_layers: 4 # 5
+      min_scale: 0.1484375 # 0.1171875
+      max_scale: 0.75 # 0.75
+      input_size_width: 192 # 256
+      input_size_height: 192 # 256
       anchor_offset_x: 0.5
       anchor_offset_y: 0.5
       strides: 8
       strides: 16
-      strides: 32 # 16
-      # strides: 16
+
+      strides: 16
+      strides: 16
+      # strides: 32
+      # strides: 32
+      # strides: 32
       aspect_ratios: 1.0
       fixed_anchor_size: true
     }
@@ -204,7 +209,7 @@ node {
   options: {
     [mediapipe.TensorsToDetectionsCalculatorOptions.ext] {
       num_classes: 1
-      num_boxes: 2944 # 2016
+      num_boxes: 2016 # 2944
       num_coords: 18
       box_coord_offset: 0
       keypoint_coord_offset: 4
@@ -214,10 +219,10 @@ node {
       score_clipping_thresh: 100.0
       reverse_output_order: true
 
-      x_scale: 256.0 # 192
-      y_scale: 256.0 # 192
-      w_scale: 256.0 # 192
-      h_scale: 256.0 # 192
+      x_scale: 192.0 # 256
+      y_scale: 192.0 # 256
+      w_scale: 192.0 # 256
+      h_scale: 192.0 # 256
       min_score_thresh: 0.5
     }
   }

@@ -1,5 +1,6 @@
 import enum
-from Inferencer.Hands import HandLandmark as HAND_LANDMARK
+from classifier.GestureClassifier import GestureLabels
+from inferencer.Hands import HandLandmark as HAND_LANDMARK
 import numpy as np
 import enum
 
@@ -35,41 +36,10 @@ class Tracker():
             self.dDists = np.array([[0, 0]] * LAST_N_DDIST_PALM, dtype = np.float64)
 
 
-    def gestureRecognition(self, hand_landmarks, palm):
-        # print(hand_landmarks.landmark[HAND_LANDMARK.INDEX_FINGER_TIP].z, "\t", hand_landmarks.landmark[HAND_LANDMARK.MIDDLE_FINGER_TIP].z)
-        # z coordinate is not reliable. It is reliable reliable when palm tilts along with finger. Finger-only z-coordinate change is not reliable. 
-
-        # First check if is fist, no action if fist. 
-        # A fist is the pinky folded in. Index and middle fingers gives lots of false positives for fist detection when left or right clicking. 
-        v1 = np.array([
-            hand_landmarks.landmark[HAND_LANDMARK.PINKY_MCP].x - hand_landmarks.landmark[HAND_LANDMARK.PINKY_PIP].x,
-            hand_landmarks.landmark[HAND_LANDMARK.PINKY_MCP].y - hand_landmarks.landmark[HAND_LANDMARK.PINKY_PIP].y
-        ])
-        v2 = np.array([
-            hand_landmarks.landmark[HAND_LANDMARK.PINKY_TIP].x - hand_landmarks.landmark[HAND_LANDMARK.PINKY_DIP].x,
-            hand_landmarks.landmark[HAND_LANDMARK.PINKY_TIP].y - hand_landmarks.landmark[HAND_LANDMARK.PINKY_DIP].y
-        ])
-        angle = np.arccos(np.dot(v1, v2) / np.linalg.norm(v1) / np.linalg.norm(v2))
-
-        is_fist = angle < FIST_THRESHOLD
-        if (is_fist):
+    def trackMovement(self, hand_landmarks, palm, gesture):
+        if gesture == GestureLabels.FIST:
             self.reset()
-            return True, False, False, np.array([0, 0], dtype = np.float64)
-
-
-        # Left click is based on the distance between index tip and thumb tip. 
-        index_thumb_dist = np.sqrt(
-            (hand_landmarks.landmark[HAND_LANDMARK.INDEX_FINGER_TIP].x - hand_landmarks.landmark[HAND_LANDMARK.THUMB_TIP].x) ** 2 + 
-            (hand_landmarks.landmark[HAND_LANDMARK.INDEX_FINGER_TIP].y - hand_landmarks.landmark[HAND_LANDMARK.THUMB_TIP].y) ** 2
-        )
-        is_left_click = index_thumb_dist < LEFT_CLICK_THRESHOLD
-
-        # Right click is based on the distance between middle tip and thumb tip. 
-        middle_thumb_dist = np.sqrt(
-            (hand_landmarks.landmark[HAND_LANDMARK.MIDDLE_FINGER_TIP].x - hand_landmarks.landmark[HAND_LANDMARK.THUMB_TIP].x) ** 2 + 
-            (hand_landmarks.landmark[HAND_LANDMARK.MIDDLE_FINGER_TIP].y - hand_landmarks.landmark[HAND_LANDMARK.THUMB_TIP].y) ** 2
-        )
-        is_right_click = middle_thumb_dist < RIGHT_CLICK_THRESHOLD
+            return np.array([0, 0], dtype = np.float64)
 
         # Use spacial averaging of multiple landmarks to smooth out fluctuations. 
         if self.trackWith == TrackingSource.PALM:
@@ -91,7 +61,7 @@ class Tracker():
         
         dDist = np.mean(self.dDists, axis = 0)
 
-        return False, is_left_click, is_right_click, dDist
+        return dDist
 
 
     def reset(self):

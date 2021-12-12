@@ -3,10 +3,15 @@
 import cv2
 import mediapipe as mp
 import numpy as np
+import pickle
+import time
 
-from Inferencer import Hands
+from sklearn.neural_network import MLPClassifier
+
+from inferencer import Hands
 from Mouse import Mouse
 from Tracker import Tracker, TrackingSource
+from classifier.GestureClassifier import GestureLabels
 
 mp_drawing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
@@ -79,6 +84,14 @@ def draw_palm_bbox(image, palm, color=(255, 0, 0)):
 #         hand_world_landmarks, mp_hands.HAND_CONNECTIONS, azimuth=5)
 
 
+data = []
+def saveData(img, palm, hand, label):
+  data.append((img, palm, hand, int(label)))
+  print(f'saved: {label}')
+
+
+with open('classifier/gesture_classifier.pickle', 'rb') as f:
+  gesture_clf = pickle.load(f)
 
 
 mouse = Mouse()
@@ -131,9 +144,19 @@ with mp_hands.Hands(
       # print(results.palm_detections[0])
 
       # Detect gesture. 
-      is_fist, is_left_click, is_right_click, dDist = tracker.gestureRecognition(hand_landmarks, palm_landmark)
+      d = []
+      for l in hand_landmarks.landmark:
+        d.append(l.x)
+        d.append(l.y)
+        d.append(l.z)
+      gesture = gesture_clf.predict([d])[0]
+      print(gesture)
+
+      # Track hand movement. 
+      dDist = tracker.trackMovement(hand_landmarks, palm_landmark, gesture)
+      
       # Control mouse. 
-      mouse(is_left_click, is_right_click, dDist)
+      mouse(gesture == GestureLabels.LEFT_CLICK, gesture == GestureLabels.RIGHT_CLICK, dDist)
 
     else:
       # No hand, reset location averaging of the tracker. 
@@ -141,6 +164,26 @@ with mp_hands.Hands(
       
     # Flip the image horizontally for a selfie-view display.
     cv2.imshow('MediaPipe Hands', cv2.flip(image, 1))
-    if cv2.waitKey(5) & 0xFF == 27:
+
+    pressed = cv2.waitKey(5)
+    if pressed & 0xFF == 27:
       break
+    if pressed == ord('f'):
+      saveData(image, palm_detection, hand_landmarks, GestureLabels.FIST)
+    if pressed == ord('l'):
+      saveData(image, palm_detection, hand_landmarks, GestureLabels.LEFT_CLICK)
+    if pressed == ord('r'):
+      saveData(image, palm_detection, hand_landmarks, GestureLabels.RIGHT_CLICK)
+    if pressed == ord('3'):
+      saveData(image, palm_detection, hand_landmarks, GestureLabels.THREE)
+    if pressed == ord('4'):
+      saveData(image, palm_detection, hand_landmarks, GestureLabels.FOUR)
+    if pressed == ord('5'):
+      saveData(image, palm_detection, hand_landmarks, GestureLabels.FIVE)
+    if pressed == ord('p'):
+      saveData(image, palm_detection, hand_landmarks, GestureLabels.PINCH)
+
 cap.release()
+
+with open('data/data_{}.pickle'.format(int(time.time())), 'wb') as f:
+  pickle.dump(data, f)
