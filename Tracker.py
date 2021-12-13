@@ -1,5 +1,5 @@
 import enum
-from classifier.GestureClassifier import GestureLabels
+from classifier.GestureLabels import GestureLabels
 from inferencer.Hands import HandLandmark as HAND_LANDMARK
 import numpy as np
 import enum
@@ -39,7 +39,6 @@ class Tracker():
     def trackMovement(self, hand_landmarks, palm, gesture):
         if gesture == GestureLabels.FIST:
             self.reset()
-            return np.array([0, 0], dtype = np.float64)
 
         # Use spacial averaging of multiple landmarks to smooth out fluctuations. 
         if self.trackWith == TrackingSource.PALM:

@@ -7,11 +7,12 @@ import pickle
 import time
 
 from sklearn.neural_network import MLPClassifier
+from classifier import DataSaver
 
 from inferencer import Hands
-from Mouse import Mouse
+from Touchpad import Touchpad
 from Tracker import Tracker, TrackingSource
-from classifier.GestureClassifier import GestureLabels
+from classifier import GestureLabels
 
 mp_drawing = mp.solutions.drawing_utils
 mp_drawing_styles = mp.solutions.drawing_styles
@@ -85,16 +86,14 @@ def draw_palm_bbox(image, palm, color=(255, 0, 0)):
 
 
 data = []
-def saveData(img, palm, hand, label):
-  data.append((img, palm, hand, int(label)))
-  print(f'saved: {label}')
 
+dataSaver = DataSaver()
 
 with open('classifier/gesture_classifier.pickle', 'rb') as f:
   gesture_clf = pickle.load(f)
 
 
-mouse = Mouse()
+touchpad = Touchpad()
 cap = cv2.VideoCapture(0)
 if cap.isOpened():
   success, image = cap.read()
@@ -156,7 +155,7 @@ with mp_hands.Hands(
       dDist = tracker.trackMovement(hand_landmarks, palm_landmark, gesture)
       
       # Control mouse. 
-      mouse(gesture == GestureLabels.LEFT_CLICK, gesture == GestureLabels.RIGHT_CLICK, dDist)
+      touchpad(gesture, dDist)
 
     else:
       # No hand, reset location averaging of the tracker. 
@@ -164,26 +163,24 @@ with mp_hands.Hands(
       
     # Flip the image horizontally for a selfie-view display.
     cv2.imshow('MediaPipe Hands', cv2.flip(image, 1))
+    cv2.setWindowProperty('MediaPipe Hands', cv2.WND_PROP_TOPMOST, 1)
 
     pressed = cv2.waitKey(5)
     if pressed & 0xFF == 27:
       break
     if pressed == ord('f'):
-      saveData(image, palm_detection, hand_landmarks, GestureLabels.FIST)
+      dataSaver.addData(image, palm_detection, hand_landmarks, GestureLabels.FIST)
     if pressed == ord('l'):
-      saveData(image, palm_detection, hand_landmarks, GestureLabels.LEFT_CLICK)
+      dataSaver.addData(image, palm_detection, hand_landmarks, GestureLabels.LEFT_CLICK)
     if pressed == ord('r'):
-      saveData(image, palm_detection, hand_landmarks, GestureLabels.RIGHT_CLICK)
+      dataSaver.addData(image, palm_detection, hand_landmarks, GestureLabels.RIGHT_CLICK)
     if pressed == ord('3'):
-      saveData(image, palm_detection, hand_landmarks, GestureLabels.THREE)
+      dataSaver.addData(image, palm_detection, hand_landmarks, GestureLabels.THREE)
     if pressed == ord('4'):
-      saveData(image, palm_detection, hand_landmarks, GestureLabels.FOUR)
+      dataSaver.addData(image, palm_detection, hand_landmarks, GestureLabels.FOUR)
     if pressed == ord('5'):
-      saveData(image, palm_detection, hand_landmarks, GestureLabels.FIVE)
+      dataSaver.addData(image, palm_detection, hand_landmarks, GestureLabels.FIVE)
     if pressed == ord('p'):
-      saveData(image, palm_detection, hand_landmarks, GestureLabels.PINCH)
+      dataSaver.addData(image, palm_detection, hand_landmarks, GestureLabels.PINCH)
 
 cap.release()
-
-with open('data/data_{}.pickle'.format(int(time.time())), 'wb') as f:
-  pickle.dump(data, f)
