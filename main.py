@@ -150,11 +150,11 @@ with mp_hands.Hands(
         d.append(l.x)
         d.append(l.y)
         d.append(l.z)
-      # gesture = gesture_clf.predict([d])[0]
+      gesture = gesture_clf.predict([d])[0]
       print("gesture: " + str(gesture))
 
       # Track hand movement. 
-      dDist = tracker.trackMovement(hand_landmarks, palm_landmark, GestureLabels.FIST)
+      dDist = tracker.trackMovement(hand_landmarks, palm_landmark, gesture)
 
     else:
       # No hand, reset location averaging of the tracker. 
@@ -170,7 +170,7 @@ with mp_hands.Hands(
 
     # Flip the image horizontally for a selfie-view display.
     cv2.imshow('MediaPipe Hands', cv2.flip(image, 1))
-    # cv2.setWindowProperty('MediaPipe Hands', cv2.WND_PROP_TOPMOST, 1)
+    cv2.setWindowProperty('MediaPipe Hands', cv2.WND_PROP_TOPMOST, 1)
 
     pressed = cv2.waitKey(5)
     if pressed & 0xFF == 27:
