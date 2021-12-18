@@ -113,6 +113,8 @@ with mp_hands.Hands(
       # If loading a video, use 'break' instead of 'continue'.
       continue
 
+    start_time = time.time()
+    
     # To improve performance, optionally mark the image as not writeable to
     # pass by reference.
     image.flags.writeable = False
@@ -148,22 +150,27 @@ with mp_hands.Hands(
         d.append(l.x)
         d.append(l.y)
         d.append(l.z)
-      gesture = gesture_clf.predict([d])[0]
-      print(gesture)
+      # gesture = gesture_clf.predict([d])[0]
+      print("gesture: " + str(gesture))
 
       # Track hand movement. 
-      dDist = tracker.trackMovement(hand_landmarks, palm_landmark, gesture)
-      
-      # Control mouse. 
-      touchpad(gesture, dDist)
+      dDist = tracker.trackMovement(hand_landmarks, palm_landmark, GestureLabels.FIST)
 
     else:
       # No hand, reset location averaging of the tracker. 
+      dDist = np.array([0, 0], dtype = np.float64)
+      gesture = GestureLabels.FIST
       tracker.reset()
       
+    end_time = time.time()
+    print(end_time - start_time)
+      
+    # Control mouse. 
+    touchpad(gesture, dDist)
+
     # Flip the image horizontally for a selfie-view display.
     cv2.imshow('MediaPipe Hands', cv2.flip(image, 1))
-    cv2.setWindowProperty('MediaPipe Hands', cv2.WND_PROP_TOPMOST, 1)
+    # cv2.setWindowProperty('MediaPipe Hands', cv2.WND_PROP_TOPMOST, 1)
 
     pressed = cv2.waitKey(5)
     if pressed & 0xFF == 27:

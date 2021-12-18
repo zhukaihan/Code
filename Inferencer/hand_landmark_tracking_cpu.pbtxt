@@ -74,8 +74,8 @@ node {
   output_stream: "LETTERBOX_PADDING:palm_letterbox_padding"
   options: {
     [mediapipe.ImageToTensorCalculatorOptions.ext] {
-      output_tensor_width: 192 # 256
-      output_tensor_height: 192 # 256
+      output_tensor_width: 192 # 256 # 192
+      output_tensor_height: 192 # 256 # 192
       keep_aspect_ratio: true
       output_tensor_float_range {
         min: 0.0
@@ -125,7 +125,7 @@ node {
         options: {
           [mediapipe.ConstantSidePacketCalculatorOptions.ext]: {
             packet {
-              string_value: "models/palm_detection_full.tflite"
+              string_value: "models/palm_detection_lite.tflite"
             }
           }
         }
@@ -177,11 +177,11 @@ node {
   output_side_packet: "anchors"
   options: {
     [mediapipe.SsdAnchorsCalculatorOptions.ext] {
-      num_layers: 4 # 5
-      min_scale: 0.1484375 # 0.1171875
-      max_scale: 0.75 # 0.75
-      input_size_width: 192 # 256
-      input_size_height: 192 # 256
+      num_layers: 4 # 5 # 4
+      min_scale: 0.1484375 # 0.1171875 # 0.1484375
+      max_scale: 0.75 # 0.75 # 0.75
+      input_size_width: 192 # 256 # 192
+      input_size_height: 192 # 256 # 192
       anchor_offset_x: 0.5
       anchor_offset_y: 0.5
       strides: 8
@@ -209,7 +209,7 @@ node {
   options: {
     [mediapipe.TensorsToDetectionsCalculatorOptions.ext] {
       num_classes: 1
-      num_boxes: 2016 # 2944
+      num_boxes: 2016 # 2944 # 2016
       num_coords: 18
       box_coord_offset: 0
       keypoint_coord_offset: 4
@@ -219,10 +219,10 @@ node {
       score_clipping_thresh: 100.0
       reverse_output_order: true
 
-      x_scale: 192.0 # 256
-      y_scale: 192.0 # 256
-      w_scale: 192.0 # 256
-      h_scale: 192.0 # 256
+      x_scale: 192.0 # 256 # 192
+      y_scale: 192.0 # 256 # 192
+      w_scale: 192.0 # 256 # 192
+      h_scale: 192.0 # 256 # 192
       min_score_thresh: 0.5
     }
   }
