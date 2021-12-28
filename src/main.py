@@ -112,6 +112,7 @@ with mp_hands.Hands(
       print("Ignoring empty camera frame.")
       # If loading a video, use 'break' instead of 'continue'.
       continue
+    # image = cv2.imread("hand_icon.png")
 
     start_time = time.time()
     
