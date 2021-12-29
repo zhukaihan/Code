@@ -1,0 +1,8 @@
+venv
+.ipynb_checkpoints
+dataset
+.idea/
+
+*.zip
+*.pyc
+*.h5

@@ -1,4 +1,11 @@
+# Gesture Mouse
+
 This repository uses Mediapipe and Pynput to achieve the control of mouse using gestures. 
+
+## How to run? 
+
 conda create -n gesture python==3.9
 conda activate gesture
 pip install -r requirements.txt
+cd src
+python main.py
