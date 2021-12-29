@@ -14,10 +14,10 @@ However, they did not transfer the weights over from TFLite.
 
 The following is the timeline:
 
-1. - [X] Transfer all the weights from TFLite to Tensorflow.
-2. - [ ] Modify the classification layers of the model.
-3. - [ ] Modify loss to train only classifications.
-4. - [ ] Collect data and train.
+1. [X] Transfer all the weights from TFLite to Tensorflow.
+2. [ ] Modify the classification layers of the model.
+3. [ ] Modify loss to train only classifications.
+4. [ ] Collect data and train.
 
 ### Transferring the Weights
 Details are in `finetune/tf/weight extraction.ipynb`.
