@@ -1,4 +1,4 @@
-## MLP for Gesture Classification
+# MLP for Gesture Classification
 
 Using Multilinear Perceptron for gesture classification is straightforward. 
 Just record the data outputted from the hand landmark model and label it. Then, feed the labeled data into MLP to train. I used the one from sklearn, since it is a small model with little data. Then, just save it as pickle and use it during hand tracking. 

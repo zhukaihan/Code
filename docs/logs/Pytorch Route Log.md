@@ -1,13 +1,13 @@
-## Pytorch Route
+# Pytorch Route
 The Pytorch route is to convert the TFLite into Pytorch, finetune in Pytorch, and convert back into TFLite. 
 I found this repository [vidursatija's BlazePalm](https://github.com/vidursatija/BlazePalm) where the author was trying to convert into CoreML. 
 It already have the Pytorch weights available for use. 
 However, it failed. 
 
-### Change the Last Layer
+## Change the Last Layer
 Changing the last layer is simple. Set require_grads=False for all layers, create new layers for the output layers, and override the existing self.class_x with the new layers. 
 
-### Convert Back to TFLite
+## Convert Back to TFLite
 This is where everything is broken. 
 Traditionally, converting would first convert Pytorch to ONNX (using Pytorch) and then to Tensorflow Saved Graph (using onnx-tf) and then to TFLite (using Tensorflow). 
 This method works, but it is not good. 

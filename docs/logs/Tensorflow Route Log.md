@@ -1,4 +1,4 @@
-## Tensorflow Route
+# Tensorflow Route
 
 Adapted from [yirueilu-b's BlazePalm](https://github.com/yirueilu-b/blaze-palm-tf2).
 
@@ -19,7 +19,7 @@ The following is the timeline:
 3. [ ] Modify loss to train only classifications.
 4. [ ] Collect data and train.
 
-### Transferring the Weights
+## Transferring the Weights
 Details are in `finetune/tf/weight extraction.ipynb`.
 
 There are two ways of getting the weights, through TFLite's inferencer, or through Python package TFLite (a TFLite model parser).
