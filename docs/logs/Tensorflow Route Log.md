@@ -15,7 +15,7 @@ However, they did not transfer the weights over from TFLite.
 The following is the timeline:
 
 1. [X] Transfer all the weights from TFLite to Tensorflow.
-2. [ ] Modify the classification layers of the model.
+2. [X] Modify the classification layers of the model.
 3. [ ] Modify loss to train only classifications.
 4. [ ] Collect data and train.
 
@@ -31,3 +31,8 @@ The names of layers from TFLite parser matches surprisingly well with Tensorflow
 Finally, the weights are copied over. One thing to notice that the TFLite parser gives the weights in buffer. Thus, it is byte data. To reconstruct the actual weight numbers, use `np.frombuffer`(arrays can be used as buffer). Another thing to notice is that the weights' axis needs to be transposed or swapped as TFLite uses different weight layout than Tensorflow.
 
 Then, it does not work (worked eventually). The model does not perform well at some point. The model does recognize the hand at certain distance, but not at distances. After inspecting the two models, the mediapipe's model and custom model, despite the weights are copied correctly, there is an error in max-pool layer. The original model is 2x2 window size, while the custom is 5x5. After changing it to 2x2, it worked flawlessly. 
+
+## Modify the Classification Layers
+The classification layers can be modified during initial model building. The weights for classification layers are not yet important (will be trained with custom data), so the weights for these layers do not need to be transferred. The details are currently in development.ipynb (TODO: will be cleaned up later). 
+
+There is an issue with the new model with custom classification layers with 7 classes. It is substantially slower than the original (one class). The slowdown gets more significant as the number of classes increases. With 1 class, it takes 0.07-0.09 seconds for inference. With 7 classes, it takes 0.23-0.32 seconds for inference, which is almost unusable on an average computer. Float-16 quantization does not help. Thus, the feasibility of this approach will be re-evaluated. 
