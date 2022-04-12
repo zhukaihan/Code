@@ -1,5 +1,6 @@
 # Modified from https://google.github.io/mediapipe/solutions/hands.html. 
 
+from cgitb import handler
 import cv2
 import mediapipe as mp
 import numpy as np
@@ -42,9 +43,16 @@ def draw_palm_bbox(image, palm, color=(255, 0, 0)):
 
 
 
-data = []
-
 dataSaver = DataSaver()
+keyToLabel = {
+  ord('f'): GestureLabels.FIST,
+  ord('l'): GestureLabels.LEFT_CLICK,
+  ord('r'): GestureLabels.RIGHT_CLICK,
+  ord('3'): GestureLabels.THREE,
+  ord('4'): GestureLabels.FOUR,
+  ord('5'): GestureLabels.FIVE,
+  ord('p'): GestureLabels.PINCH,
+}
 
 with open('classifier/gesture_classifier.pickle', 'rb') as f:
   gesture_clf = pickle.load(f)
@@ -59,6 +67,7 @@ if cap.isOpened():
 # For webcam input:
 # static_image_mode allows palm bbox output, but lowers landmark quality as it no longer uses last landmark info. 
 with Hands(
+    use_custom_ssd=False, # Use True to use the custom 7-classes SSD model. 
     model_complexity=0,
     min_detection_confidence=0.5,
     max_num_hands=1,
@@ -122,6 +131,7 @@ with Hands(
       
     end_time = time.time()
     print(end_time - start_time)
+    print()
       
     # Control mouse. 
     touchpad(gesture, dDist)
@@ -133,19 +143,7 @@ with Hands(
     pressed = cv2.waitKey(5)
     if pressed & 0xFF == 27:
       break
-    if pressed == ord('f'):
-      dataSaver.addData(image, palm_detection, hand_landmarks, GestureLabels.FIST)
-    if pressed == ord('l'):
-      dataSaver.addData(image, palm_detection, hand_landmarks, GestureLabels.LEFT_CLICK)
-    if pressed == ord('r'):
-      dataSaver.addData(image, palm_detection, hand_landmarks, GestureLabels.RIGHT_CLICK)
-    if pressed == ord('3'):
-      dataSaver.addData(image, palm_detection, hand_landmarks, GestureLabels.THREE)
-    if pressed == ord('4'):
-      dataSaver.addData(image, palm_detection, hand_landmarks, GestureLabels.FOUR)
-    if pressed == ord('5'):
-      dataSaver.addData(image, palm_detection, hand_landmarks, GestureLabels.FIVE)
-    if pressed == ord('p'):
-      dataSaver.addData(image, palm_detection, hand_landmarks, GestureLabels.PINCH)
+    elif pressed in keyToLabel.keys():
+      dataSaver.addData(image, palm_detection, hand_landmarks, keyToLabel[pressed])
 
 cap.release()

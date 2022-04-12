@@ -66,8 +66,8 @@ class HandLandmark(enum.IntEnum):
   PINKY_DIP = 19
   PINKY_TIP = 20
 
-
-_BINARYPB_FILE_PATH = 'hand_landmark_tracking_cpu.binarypb'
+HAND_LANDMARK_TRACKING_CPU_PBTXT = './inferencer/hand_landmark_tracking_cpu.pbtxt'
+HAND_LANDMARK_TRACKING_CPU_CUSTOM_SSD_PBTXT = './inferencer/hand_landmark_tracking_cpu_custom_ssd.pbtxt'
 
 
 class Hands(SolutionBase):
@@ -84,6 +84,7 @@ class Hands(SolutionBase):
   """
 
   def __init__(self,
+               use_custom_ssd=False,
                max_num_hands=2,
                model_complexity=1,
                min_detection_confidence=0.5,
@@ -106,7 +107,10 @@ class Hands(SolutionBase):
         hand landmarks to be considered tracked successfully. See details in
         https://solutions.mediapipe.dev/hands#min_tracking_confidence.
     """
-    with open('./Inferencer/hand_landmark_tracking_cpu.pbtxt') as f:
+    pbtxtpath = HAND_LANDMARK_TRACKING_CPU_PBTXT
+    if (use_custom_ssd):
+      pbtxtpath = HAND_LANDMARK_TRACKING_CPU_CUSTOM_SSD_PBTXT
+    with open(pbtxtpath) as f:
       lines = f.read()
     super().__init__(
         graph_config=lines,

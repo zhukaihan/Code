@@ -25,8 +25,11 @@ def blaze_palm_block(x, filters, strides):
     out = tf.keras.layers.Activation("relu")(out)
     return out
 
+# def build_blaze_palm_base(x_in):
 
-def build_blaze_palm_model(to_64=False):
+#     return blaze_palm_block_8, upsample_16, upsample_32
+
+def build_blaze_palm_model(to_64=False, n_classes = 1):
     x_in = tf.keras.layers.Input(shape=(IMAGE_HEIGHT, IMAGE_WIDTH, IMAGE_CHANNEL), batch_size=1)
 
     convolution1 = tf.keras.layers.Conv2D(filters=32, kernel_size=(3, 3), strides=2, padding='same')(x_in)
@@ -60,6 +63,11 @@ def build_blaze_palm_model(to_64=False):
     upsample_32 = tf.keras.layers.Add()([upsample_32, blaze_palm_block_32])
     upsample_32 = blaze_palm_block(x=upsample_32, filters=128, strides=1)
 
+    # blaze_palm_block_8, upsample_16, upsample_32 = build_blaze_palm_base(x_in)
+
+    # blaze_palm_block_8, upsample_16, upsample_32 = tf.keras.Model(inputs=x_in, outputs=[blaze_palm_block_8, upsample_16, upsample_32])(x_in, training=False)
+    # blaze_palm_block_8, upsample_16, upsample_32 = base_model()
+
     reg_8 = tf.keras.layers.Conv2D(filters=36, kernel_size=(1, 1), strides=(1, 1), padding='same')(upsample_32)
     reg_16 = tf.keras.layers.Conv2D(filters=36, kernel_size=(1, 1), strides=(1, 1), padding='same')(upsample_16)
     reg_32 = tf.keras.layers.Conv2D(filters=108, kernel_size=(1, 1), strides=(1, 1), padding='same')(blaze_palm_block_8)
@@ -68,13 +76,14 @@ def build_blaze_palm_model(to_64=False):
     reshape_reg_32 = tf.keras.layers.Reshape([-1, 18])(reg_32)
     loc = tf.keras.layers.Concatenate(axis=1)([reshape_reg_8, reshape_reg_16, reshape_reg_32])
 
-    cls_8 = tf.keras.layers.Conv2D(filters=2, kernel_size=(1, 1), strides=(1, 1), padding='same')(upsample_32)
-    cls_16 = tf.keras.layers.Conv2D(filters=2, kernel_size=(1, 1), strides=(1, 1), padding='same')(upsample_16)
-    cls_32 = tf.keras.layers.Conv2D(filters=6, kernel_size=(1, 1), strides=(1, 1), padding='same')(blaze_palm_block_8)
-    reshape_cls_8 = tf.keras.layers.Reshape([-1, 1])(cls_8)
-    reshape_cls_16 = tf.keras.layers.Reshape([-1, 1])(cls_16)
-    reshape_cls_32 = tf.keras.layers.Reshape([-1, 1])(cls_32)
+    cls_8 = tf.keras.layers.Conv2D(filters=2 * n_classes, kernel_size=(1, 1), strides=(1, 1), padding='same')(upsample_32)
+    cls_16 = tf.keras.layers.Conv2D(filters=2 * n_classes, kernel_size=(1, 1), strides=(1, 1), padding='same')(upsample_16)
+    cls_32 = tf.keras.layers.Conv2D(filters=6 * n_classes, kernel_size=(1, 1), strides=(1, 1), padding='same')(blaze_palm_block_8)
+    reshape_cls_8 = tf.keras.layers.Reshape([-1, n_classes])(cls_8)
+    reshape_cls_16 = tf.keras.layers.Reshape([-1, n_classes])(cls_16)
+    reshape_cls_32 = tf.keras.layers.Reshape([-1, n_classes])(cls_32)
     conf = tf.keras.layers.Concatenate(axis=1)([reshape_cls_8, reshape_cls_16, reshape_cls_32])
+    # conf = tf.keras.layers.Activation("softmax")(conf)
 
     # if to_64:
     #     upsample_64 = tf.keras.layers.Conv2DTranspose(filters=64, kernel_size=(2, 2), strides=2)(upsample_32)
