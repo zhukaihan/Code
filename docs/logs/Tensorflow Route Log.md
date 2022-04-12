@@ -33,6 +33,8 @@ Finally, the weights are copied over. One thing to notice that the TFLite parser
 Then, it does not work (worked eventually). The model does not perform well at some point. The model does recognize the hand at certain distance, but not at distances. After inspecting the two models, the mediapipe's model and custom model, despite the weights are copied correctly, there is an error in max-pool layer. The original model is 2x2 window size, while the custom is 5x5. After changing it to 2x2, it worked flawlessly. 
 
 ## Modify the Classification Layers
-The classification layers can be modified during initial model building. The weights for classification layers are not yet important (will be trained with custom data), so the weights for these layers do not need to be transferred. The details are currently in development.ipynb (TODO: will be cleaned up later). 
+Details are in `finetune/tf/development.ipynb` (TODO: will be cleaned up later).
+
+The classification layers can be modified during initial model building. The weights for classification layers are not yet important (will be trained with custom data), so the weights for these layers do not need to be transferred. 
 
 There is an issue with the new model with custom classification layers with 7 classes. It is substantially slower than the original (one class). The slowdown gets more significant as the number of classes increases. With 1 class, it takes 0.07-0.09 seconds for inference. With 7 classes, it takes 0.23-0.32 seconds for inference, which is almost unusable on an average computer. Float-16 quantization does not help. Thus, the feasibility of this approach will be re-evaluated. 
